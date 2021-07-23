@@ -66,29 +66,27 @@ class DiscordBot(object):
         }
 
     def add_author(self, msg, user_info, server_url):
-        filename = None
         avatar = user_info["avatar"]
-        if avatar:
+        if avatar and not avatar.startswith("http"):
             type = avatar[5:].split(";")[0]
             filename = f"avatar.{type.split('/')[1]}"
             msg["files"].append(
                 (
                     "file",
                     (
-                        "avatar.jpeg",
+                        filename,
                         (base64.b64decode(avatar.split(",")[1])),
                         type,
                     ),
                 )
             )
+            avatar = f"attachment://{filename}"
 
         msg["embeds"][0]["author"].update(
             {
                 "name": user_info["name"],
                 "url": f"{server_url}/profile/{user_info['id']}",
-                "icon_url": f"attachment://{filename}"
-                if filename
-                else self.SPECKLE_LOGO,
+                "icon_url": avatar or self.SPECKLE_LOGO,
             }
         )
 
@@ -102,12 +100,12 @@ class DiscordBot(object):
     def on_stream_update(
         self, server_info, user_info, stream_info, webhook_info, event_info
     ):
-
+        server_url = server_info["canonicalUrl"].rstrip("/")
         msg = self.get_message_template()
         msg["embeds"][0].update(
             {
                 "title": f"Stream Updated: [{stream_info['name']}]",
-                "url": f"{server_info['canonicalUrl']}/streams/{stream_info['id']}",
+                "url": f"{server_url}/streams/{stream_info['id']}",
                 "description": f"{user_info['name']} updated stream `{stream_info['id']}`",
                 "color": COLOURS["speckle blue"],
                 "fields": [
@@ -122,28 +120,31 @@ class DiscordBot(object):
                         "inline": True,
                     },
                 ],
+                "image": {"url": f"{server_url}/preview/{stream_info['id']}"},
             }
         )
-        self.add_author(msg, user_info, server_info["canonicalUrl"])
+        self.add_author(msg, user_info, server_url)
         self.send_to_discord(msg)
 
-    def on_stream_permissions_add(
-        self, server_info, user_info, stream_info, webhook_info, event_info
-    ):
-        msg = self.get_message_template()
+    # def on_stream_permissions_add(
+    #     self, server_info, user_info, stream_info, webhook_info, event_info
+    # ):
+    #     msg = self.get_message_template()
 
-    def on_stream_permissions_remove(
-        self, server_info, user_info, stream_info, webhook_info, event_info
-    ):
-        msg = self.get_message_template()
+    # def on_stream_permissions_remove(
+    #     self, server_info, user_info, stream_info, webhook_info, event_info
+    # ):
+    #     msg = self.get_message_template()
 
     def on_commit_create(
         self, server_info, user_info, stream_info, webhook_info, event_info
     ):
+        server_url = server_info["canonicalUrl"].rstrip("/")
+
         commit_id = event_info["id"]
         commit_info = event_info["commit"]
 
-        client = SpeckleClient(host=server_info["canonicalUrl"], use_ssl=False)
+        client = SpeckleClient(host=server_url, use_ssl=False)
         client.authenticate(os.environ.get("SPECKLE_TOKEN"))
         commit_obj = client.object.get(stream_info["id"], commit_info["objectId"])
         obj_count = getattr(commit_obj, "totalChildrenCount", "_unknown_")
@@ -152,7 +153,7 @@ class DiscordBot(object):
         msg["embeds"][0].update(
             {
                 "title": f"Commit Created on {stream_info['name']}/{commit_info['branchName']}",
-                "url": f"{server_info['canonicalUrl']}/streams/{stream_info['id']}/commits/{commit_id}",
+                "url": f"{server_url}/streams/{stream_info['id']}/commits/{commit_id}",
                 "description": f"{user_info['name']} created a new commit `{commit_id}`",
                 "color": COLOURS["futures"],
                 "fields": [
@@ -170,23 +171,25 @@ class DiscordBot(object):
                 "image": {
                     "url": None
                     if commit_info["branchName"] == "globals"
-                    else f"{server_info['canonicalUrl']}/preview/{stream_info['id']}/commits/{commit_id}"
+                    else f"{server_url}/preview/{stream_info['id']}/commits/{commit_id}"
                 },
             }
         )
-        self.add_author(msg, user_info, server_info["canonicalUrl"])
+        self.add_author(msg, user_info, server_url)
         self.send_to_discord(msg)
 
     def on_commit_update(
         self, server_info, user_info, stream_info, webhook_info, event_info
     ):
+        server_url = server_info["canonicalUrl"].rstrip("/")
+
         commit_info = event_info["old"]
 
         msg = self.get_message_template()
         msg["embeds"][0].update(
             {
                 "title": f"Commit Updated on [{stream_info['name']}]/{commit_info['branchName']}",
-                "url": f"{server_info['canonicalUrl']}/streams/{stream_info['id']}/commits/{commit_info['id']}",
+                "url": f"{server_url}/streams/{stream_info['id']}/commits/{commit_info['id']}",
                 "description": f"Commit `{commit_info['id']}` on branch `{commit_info['branchName']}` updated by {commit_info['authorName']}",
                 "color": COLOURS["spark"],
                 "fields": [
@@ -204,22 +207,23 @@ class DiscordBot(object):
                 "image": {
                     "url": None
                     if commit_info["branchName"] == "globals"
-                    else f"{server_info['canonicalUrl']}/preview/{stream_info['id']}/commits/{commit_info['id']}"
+                    else f"{server_url}/preview/{stream_info['id']}/commits/{commit_info['id']}"
                 },
             }
         )
-        self.add_author(msg, user_info, server_info["canonicalUrl"])
+        self.add_author(msg, user_info, server_url)
         self.send_to_discord(msg)
 
     def on_branch_create(
         self, server_info, user_info, stream_info, webhook_info, event_info
     ):
+        server_url = server_info["canonicalUrl"].rstrip("/")
         branch = event_info["branch"]
         msg = self.get_message_template()
         msg["embeds"][0].update(
             {
                 "title": f"Branch Created: [{stream_info['name']}]/{branch['name']}",
-                "url": f"{server_info['canonicalUrl']}/streams/{stream_info['id']}/branches/{quote(branch['name'])}",
+                "url": f"{server_url}/streams/{stream_info['id']}/branches/{quote(branch['name'])}",
                 "description": f"{user_info['name']} created branch `{branch['id']}` on stream _{stream_info['name']}_ (`{stream_info['id']}`)",
                 "color": COLOURS["twist"],
                 "fields": [
@@ -235,18 +239,19 @@ class DiscordBot(object):
                 ],
             }
         )
-        self.add_author(msg, user_info, server_info["canonicalUrl"])
+        self.add_author(msg, user_info, server_url)
         self.send_to_discord(msg)
 
     def on_branch_update(
         self, server_info, user_info, stream_info, webhook_info, event_info
     ):
+        server_url = server_info["canonicalUrl"].rstrip("/")
         branch = event_info["new"]
         msg = self.get_message_template()
         msg["embeds"][0].update(
             {
                 "title": f"Branch Updated: [{stream_info['name']}]/{branch['name']}",
-                "url": f"{server_info['canonicalUrl']}/streams/{stream_info['id']}/branches/{quote(branch['name'])}",
+                "url": f"{server_url}/streams/{stream_info['id']}/branches/{quote(branch['name'])}",
                 "description": f"{user_info['name']} updated branch `{branch['id']}` on stream _{stream_info['name']}_ (`{stream_info['id']}`)",
                 "color": COLOURS["mantis"],
                 "fields": [
@@ -263,21 +268,22 @@ class DiscordBot(object):
                 ],
             }
         )
-        self.add_author(msg, user_info, server_info["canonicalUrl"])
+        self.add_author(msg, user_info, server_url)
         self.send_to_discord(msg)
 
     def on_branch_delete(
         self, server_info, user_info, stream_info, webhook_info, event_info
     ):
+        server_url = server_info["canonicalUrl"].rstrip("/")
         branch = event_info["branch"]
         msg = self.get_message_template()
         msg["embeds"][0].update(
             {
                 "title": f"Branch Deleted: [{stream_info['name']}]/{branch['name']}",
-                "url": f"{server_info['canonicalUrl']}/streams/{stream_info['id']}/branches",
+                "url": f"{server_url}/streams/{stream_info['id']}/branches",
                 "description": f"{user_info['name']} deleted branch `{branch['id']}` on stream _{stream_info['name']}_ (`{stream_info['id']}`)",
                 "color": COLOURS["red"],
             }
         )
-        self.add_author(msg, user_info, server_info["canonicalUrl"])
+        self.add_author(msg, user_info, server_url)
         self.send_to_discord(msg)
