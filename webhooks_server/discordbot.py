@@ -168,11 +168,6 @@ class DiscordBot(object):
                     {"name": "Object Count", "value": obj_count},
                     {"name": "Object Id", "value": commit_info["objectId"]},
                 ],
-                "image": {
-                    "url": None
-                    if commit_info["branchName"] == "globals"
-                    else f"{server_url}/preview/{stream_info['id']}/commits/{commit_id}"
-                },
             }
         )
         self.add_author(msg, user_info, server_url)
@@ -190,7 +185,7 @@ class DiscordBot(object):
             {
                 "title": f"Commit Updated on [{stream_info['name']}]/{commit_info['branchName']}",
                 "url": f"{server_url}/streams/{stream_info['id']}/commits/{commit_info['id']}",
-                "description": f"Commit `{commit_info['id']}` on branch `{commit_info['branchName']}` updated by {commit_info['authorName']}",
+                "description": f"{user_info['name']} updated  commit `{commit_info['id']}` on branch {commit_info['branchName']}",
                 "color": COLOURS["spark"],
                 "fields": [
                     {
