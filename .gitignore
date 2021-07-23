@@ -109,3 +109,4 @@ venv.bak/
 # other
 scratch.py
 .vscode
+ngrok*

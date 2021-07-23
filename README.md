@@ -5,8 +5,8 @@ This is a simple example of what you can do using Speckle Stream Webhooks.
 Requests from the Speckle Server are consumed and formatted to then be sent to Discord:
 
 ![example-messages](https://user-images.githubusercontent.com/7717434/126758892-3bb465af-56ba-4574-ae58-72a4772b1996.png)
-![stream-update-example](https://user-images.githubusercontent.com/7717434/126761576-8a08a861-ed43-4ab5-b573-70d8e1ad537b.png)
-![commit-create-example](https://user-images.githubusercontent.com/7717434/126761699-acba440f-7c13-4660-afa9-90f25af65747.png)
+![stream-update-example](https://user-images.githubusercontent.com/7717434/126792981-0e20b52e-4eda-45fc-bf62-50332ebbbf1b.png)
+![commit-update-example](https://user-images.githubusercontent.com/7717434/126761699-acba440f-7c13-4660-afa9-90f25af65747.png)
 
 ## Setup
 
