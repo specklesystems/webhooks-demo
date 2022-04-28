@@ -3,18 +3,18 @@ import os
 import json
 import hmac
 import cherrypy
-from webhooks_server.discordbot import DiscordBot
+from bots.starterbot import StarterBot
 
 from devtools import debug
 
 # Web server:
 class WebhookServer(object):
-    SECRET: str = os.environ.get("SECRET", None)
-    BOT: DiscordBot
+    SECRET: str = os.environ.get("SECRET", '')
+    BOT: StarterBot
 
     def __init__(self, bot_url: str) -> None:
         super().__init__()
-        self.BOT = DiscordBot(bot_url)
+        self.BOT = StarterBot()
 
     @cherrypy.expose
     @cherrypy.tools.json_in()
